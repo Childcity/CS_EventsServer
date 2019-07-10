@@ -1,25 +1,25 @@
-﻿using CS_EventsServer.Server.DAL.Entities;
+﻿using CS_EventsServer.Server.Comunication.Commands;
+using CS_EventsServer.Server.DAL.Entities;
 using CS_EventsServer.Server.DAL.Interfaces;
+using CS_EventsServer.Server.DAL.Repositories;
+using CS_EventsServer.Server.DTO;
 using CS_EventsServer.Server.Interfaces;
-using NLayerApp.DAL.Repositories;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
-using TableDependency.SqlClient;
-using TableDependency.SqlClient.Base;
-using TableDependency.SqlClient.Base.Enums;
-using TableDependency.SqlClient.Base.EventArgs;
-using TableDependency.SqlClient.Exceptions;
+using System.Threading.Tasks;
 
 namespace CS_EventsServer.Server {
 
 	public class CardsEventsWatcherServer: ICardsEventsWatcherServer {
-		private static readonly string dbName = "StopNet4";
 		private bool isRunning;
 		private IUnitOfWork unitOfWork;
 		private readonly Configuration conf;
+		private static readonly HttpClient httpClient = new HttpClient();
 
 		private DateTime lastNotifiedDateTime;
 
@@ -33,70 +33,122 @@ namespace CS_EventsServer.Server {
 				conf.Load();
 
 				Log.Info("ConnectionString: " + conf.ConnectionString);
-
 				unitOfWork = new EFUnitOfWork(conf.ConnectionString);
 
+				Log.Info("Trying to get last event from dbo.Event_55");
 				lastNotifiedDateTime = getLastDateTime();
 
-				Log.Info("Server started!");
-
-				while(isRunning) {
-
-					var lastDateTime = getLastDateTime();
-
-					Log.Trace("lastNotifiedDateTime" + lastNotifiedDateTime.ToString());
-					Log.Trace("lastDateTime" + lastDateTime.ToString());
-
-					if(lastNotifiedDateTime < lastDateTime) {
-						foreach(var event55 in getEvents(lastNotifiedDateTime, lastDateTime)) {
-							Log.Trace($"Should notify: {event55.CardNumber.ToString()}");
-						}
-					}
-
-					Thread.Sleep(4000);
-				}
+				setupNetConfig();
 			} catch(Exception e) {
 				Log.Fatal("Error ocure, while server starting!\n" + e.ToString());
+				Stop();
+				return;
 			}
+
+			Log.Info("Server started!");
+
+			doWatching();
 		}
 
-		private List<Event55> getEvents(DateTime from, DateTime to) {
-			var events = new List<Event55>(0);
-			try {
-				using(SqlConnection conn = new SqlConnection(conf.ConnectionString)) {
-					SqlCommand command = new SqlCommand($"SELECT * FROM [StopNet4].[dbo].[tblEvents_55] WHERE colEventTime > '{from.ToString("yyyy-MM-ddTHH:mm:ss.fff")}' ORDER BY [colEventTime] ASC;", conn);
-					Log.Trace(command.CommandText);
-					conn.Open();
-					using(SqlDataReader reader = command.ExecuteReader()) {
-						if(reader.HasRows) {
-							while(reader.Read()) {
-								Event55 event55 = new Event55 {
-									EventNumber = reader.GetSqlDecimal(reader.GetOrdinal("colEventNumber")).Value,
-									EventCode = reader.GetSqlInt32(reader.GetOrdinal("colEventCode")).Value,
-									//HolderID = reader.GetSqlInt32(reader.GetOrdinal("colHolderID")).Value,
-									//Direction = reader.GetSqlInt32(reader.GetOrdinal("colDirection")).Value,
-									CardNumber = reader.GetSqlDecimal(reader.GetOrdinal("colCardNumber")).Value,
-									EventTime = reader.GetSqlDateTime(reader.GetOrdinal("colEventTime")).Value
-								};
+		private void doWatching() {
+			var notifierTasks = new List<Task>();
+
+			while(isRunning) {
+				try {
+					var lastDateTime = getLastDateTime();
+
+					//Log.Debug("lastNotifiedDateTime: " + lastNotifiedDateTime.ToString());
+					//Log.Debug("lastDateTime:         " + lastDateTime.ToString());
+
+					if(lastNotifiedDateTime < lastDateTime) {
+						notifierTasks.Clear();
+
+						// for each new event we create new request
+						foreach(var event55 in getEvents(lastNotifiedDateTime, lastDateTime)) {
+							Log.Debug($"Should notify: {event55.EventNumber.ToString()}");
+
+							// for each client endpoint we create new notification request
+							// and add it to notifierTasks List
+							foreach(var endPoint in conf.ClientUrls) {
+								var command = new RequestPushEvent(
+									new EventDTO() {
+										CardNumber = event55.CardNumber,
+										EventTime = event55.EventTime
+									});
+
+								Log.Trace(JsonConvert.SerializeObject(command, Formatting.Indented));
+
+								string event55Json = JsonConvert.ToString(JsonConvert.SerializeObject(event55, Formatting.Indented));
+								Log.Debug(event55Json);
+								string eventJson = @"{""text"":" + event55Json + "}";
+
+								notifierTasks.Add(
+									httpClient.PostAsync(
+										endPoint,
+										new StringContent(eventJson, System.Text.Encoding.UTF8, "application/json")));
 							}
+
+							if(!isRunning)
+								break;
 						}
+
+						Task.WaitAll(notifierTasks.ToArray());
+
+
+						lastNotifiedDateTime = lastDateTime;
 					}
+				} catch(Exception e) {
+					Log.Warn("Error ocure, while watching events\n" + e.ToString());
 				}
-			} catch(Exception e) {
-				Log.Warn("Cannot select last 'colEventTime' of Event\n" + e.ToString());
+
+				Thread.Sleep(500);
 			}
-
-			return events;
-		}
-
-		private DateTime getLastDateTime() {
-			return unitOfWork.Events55.GetAll().OrderBy(item => item.EventTime).FirstOrDefault().EventTime;
 		}
 
 		public void Stop() {
 			Log.Info("Server has been stopped!");
 			isRunning = false;
 		}
-	
+
+		private void setupNetConfig() {
+			ServicePointManager.DefaultConnectionLimit = 20;
+			foreach(var endPoint in conf.ClientUrls) {
+				var habrServicePoint = ServicePointManager.FindServicePoint(endPoint);
+				habrServicePoint.MaxIdleTime = 100000;
+				habrServicePoint.ConnectionLeaseTimeout = 60000;
+			}
+		}
+
+		private List<Event55> getEvents(DateTime from, DateTime to) {
+			return unitOfWork.Events55.GetAll(true)
+				.Where(item => item.EventTime > from && item.EventTime <= to)
+				.ToList();
+		}
+
+		private DateTime getLastDateTime() {
+			return unitOfWork.Events55.GetAll(true)
+				.Max(item => item.EventTime);
+		}
+
+		#region IDisposable Support
+
+		private bool disposedValue = false;
+
+		protected virtual void Dispose(bool disposing) {
+			if(!disposedValue) {
+				if(disposing) {
+					unitOfWork.Dispose();
+					httpClient.Dispose();
+				}
+
+				disposedValue = true;
+			}
+		}
+
+		public void Dispose() {
+			Dispose(true);
+		}
+
+		#endregion IDisposable Support
 	}
 }

@@ -16,8 +16,9 @@ namespace CS_EventsServer.Server.DAL.EF {
 
 		}
 
-		public static implicit operator StopNet4Context(Event55Repository v) {
-			throw new NotImplementedException();
+		protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+			modelBuilder.Entity<Event55>().HasKey(col => new{ col.EventNumber, col.EventTime });
 		}
 	}
 }

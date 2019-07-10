@@ -1,23 +1,16 @@
 ﻿using CS_EventsServer.Server;
 using CS_EventsServer.Server.Interfaces;
 using NLog;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Linq;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.ServiceProcess;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace CS_EventsServer {
+
 	public partial class CardsEventsWatcherSvc: ServiceBase {
-		private static Logger log = LogManager.GetCurrentClassLogger();
-		ICardsEventsWatcherServer server;
-		Thread serverThread;
+		private ICardsEventsWatcherServer server;
+		private Thread serverThread;
 
 		public CardsEventsWatcherSvc() {
 			InitializeComponent();
@@ -27,19 +20,25 @@ namespace CS_EventsServer {
 		}
 
 		protected override void OnStart(string[] args) {
-			server = new CardsEventsWatcherServer();
-			serverThread = new Thread(new ThreadStart(server.Start));
-			serverThread.Start();
+			try {
+				server = new CardsEventsWatcherServer();
+				serverThread = new Thread(new ThreadStart(server.Start));
+				serverThread.Start();
+			} catch(System.Exception e) {
+				Log.Fatal(e.Message + "\n" + e.StackTrace);
+			}
 		}
 
 		protected override void OnStop() {
 			server.Stop();
-			serverThread.Join(1000);
+			serverThread.Join(2000);
+			server.Dispose();
 		}
 	}
 
 	public static class Log {
 		private static Logger log = LogManager.GetCurrentClassLogger();
+
 		private enum Type { Trace, Debug, Info, Warn, Error, Fatal }
 
 		public static void Trace(string message,
@@ -75,12 +74,29 @@ namespace CS_EventsServer {
 		private static void LoggMsg(Type logType, string message, string filePath, int lineNumber) {
 			message = $"[{filePath.Substring(filePath.LastIndexOf('\\'))} {lineNumber}] {message}";
 			switch(logType) {
-				case Type.Trace: log.Trace(message); break;
-				case Type.Debug: log.Debug(message); break;
-				case Type.Info: log.Info(message); break;
-				case Type.Warn: log.Warn(message); break;
-				case Type.Error: log.Error(message); break;
-				case Type.Fatal: log.Error(message); break;
+				case Type.Trace:
+					log.Trace(message);
+					break;
+
+				case Type.Debug:
+					log.Debug(message);
+					break;
+
+				case Type.Info:
+					log.Info(message);
+					break;
+
+				case Type.Warn:
+					log.Warn(message);
+					break;
+
+				case Type.Error:
+					log.Error(message);
+					break;
+
+				case Type.Fatal:
+					log.Error(message);
+					break;
 			}
 		}
 	}

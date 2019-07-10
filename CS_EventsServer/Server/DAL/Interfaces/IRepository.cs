@@ -6,9 +6,8 @@ namespace CS_EventsServer.Server.DAL.Interfaces
     public interface IRepository<T>
 		where T : class
     {
-        IEnumerable<T> GetAll();
+        IEnumerable<T> GetAll(bool asNoTracking = false);
         T Get(int id);
-        IEnumerable<T> Find(Func<T, bool> predicate);
         void Create(T item);
         void Update(T item);
         void Delete(int id);

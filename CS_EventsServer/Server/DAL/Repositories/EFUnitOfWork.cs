@@ -2,9 +2,8 @@
 using CS_EventsServer.Server.DAL.Entities;
 using CS_EventsServer.Server.DAL.Interfaces;
 using CS_EventsServer.Server.DAL.Repositories.SQLServer;
-using System;
 
-namespace NLayerApp.DAL.Repositories {
+namespace CS_EventsServer.Server.DAL.Repositories {
 	public class EFUnitOfWork :IUnitOfWork {
 		private StopNet4Context db;
 		private Event55Repository event55Repository;
@@ -20,7 +19,7 @@ namespace NLayerApp.DAL.Repositories {
 		}
 
 		#region IDisposable Support
-		private bool disposedValue = false; // Для определения избыточных вызовов
+		private bool disposedValue = false;
 
 		protected virtual void Dispose(bool disposing) {
 			if(!disposedValue) {
@@ -30,11 +29,9 @@ namespace NLayerApp.DAL.Repositories {
 				disposedValue = true;
 			}
 		}
-
-		// Этот код добавлен для правильной реализации шаблона высвобождаемого класса.
+		
 		public void Dispose() {
 			Dispose(true);
-			GC.SuppressFinalize(this);
 		}
 		#endregion
 	}

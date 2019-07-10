@@ -12,10 +12,9 @@ namespace CS_EventsServer.Server.DAL.Repositories.SQLServer {
 
 		public Event55Repository(StopNet4Context dbContext) {
 			db = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-			//db.Events55.Load();
 		}
-		public IEnumerable<Event55> GetAll() {
-			return db.Events55;
+		public IEnumerable<Event55> GetAll(bool asNoTracking) {
+			return asNoTracking ? db.Events55.AsNoTracking() : db.Events55;	
 		}
 
 		public Event55 Get(int id) {
@@ -28,10 +27,6 @@ namespace CS_EventsServer.Server.DAL.Repositories.SQLServer {
 
 		public void Update(Event55 play) {
 			db.Entry(play).State = EntityState.Modified;
-		}
-
-		public IEnumerable<Event55> Find(Func<Event55, bool> predicate) {
-			return db.Events55.Where(predicate);
 		}
 
 		public void Delete(int id) {
