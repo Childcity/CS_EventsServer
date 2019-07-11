@@ -110,6 +110,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Xml" />
+    <Reference Include="websocket-sharp">
+      <HintPath>C:\DevLib\C#\websocket-sharp-master\websocket-sharp\bin\Release\websocket-sharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CardsEventsWatcherSvc.cs">
@@ -120,6 +123,7 @@
     </Compile>
     <Compile Include="Server\Comunication\Commands\CommandBase.cs" />
     <Compile Include="Server\Comunication\Commands\RequestPushEvent.cs" />
+    <Compile Include="Server\Comunication\ComunicationClient.cs" />
     <Compile Include="Server\DAL\EF\StopNet4Context.cs" />
     <Compile Include="Server\DAL\Entities\Event55.cs" />
     <Compile Include="Program.cs" />

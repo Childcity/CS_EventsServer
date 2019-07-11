@@ -1,4 +1,5 @@
-﻿using CS_EventsServer.Server.Comunication.Commands;
+﻿using CS_EventsServer.Server.Comunication;
+using CS_EventsServer.Server.Comunication.Commands;
 using CS_EventsServer.Server.DAL.Entities;
 using CS_EventsServer.Server.DAL.Interfaces;
 using CS_EventsServer.Server.DAL.Repositories;
@@ -19,9 +20,15 @@ namespace CS_EventsServer.Server {
 		private bool isRunning;
 		private IUnitOfWork unitOfWork;
 		private readonly Configuration conf;
-		private static readonly HttpClient httpClient = new HttpClient();
+		private static readonly HttpClient httpClient;
+		private static readonly ComunicationClient comunicator;
 
 		private DateTime lastNotifiedDateTime;
+
+		static CardsEventsWatcherServer() {
+			httpClient = new HttpClient();
+			comunicator = new ComunicationClient();
+		}
 
 		public CardsEventsWatcherServer() {
 			conf = new Configuration();
@@ -31,6 +38,9 @@ namespace CS_EventsServer.Server {
 			try {
 				isRunning = true;
 				conf.Load();
+
+				comunicator.ServersUrls = conf.ClientUrls;
+				comunicator.ConnectSubscribers();
 
 				Log.Info("ConnectionString: " + conf.ConnectionString);
 				unitOfWork = new EFUnitOfWork(conf.ConnectionString);
@@ -76,6 +86,7 @@ namespace CS_EventsServer.Server {
 										EventTime = event55.EventTime
 									});
 
+								comunicator.NotifyAll(command);
 								Log.Trace(JsonConvert.SerializeObject(command, Formatting.Indented));
 
 								string event55Json = JsonConvert.ToString(JsonConvert.SerializeObject(event55, Formatting.Indented));
