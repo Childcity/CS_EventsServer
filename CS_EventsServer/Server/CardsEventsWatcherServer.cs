@@ -39,7 +39,8 @@ namespace CS_EventsServer.Server {
 				isRunning = true;
 				conf.Load();
 
-				comunicator.ServersUrls = conf.ClientUrls;
+				// setup comunication with bot servers
+				comunicator.ServersUrls = conf.ServersUrls;
 				comunicator.ConnectSubscribers();
 
 				Log.Info("ConnectionString: " + conf.ConnectionString);
@@ -79,7 +80,7 @@ namespace CS_EventsServer.Server {
 
 							// for each client endpoint we create new notification request
 							// and add it to notifierTasks List
-							foreach(var endPoint in conf.ClientUrls) {
+							foreach(var endPoint in conf.ServersUrls) {
 								var command = new RequestPushEvent(
 									new EventDTO() {
 										CardNumber = event55.CardNumber,
@@ -87,17 +88,6 @@ namespace CS_EventsServer.Server {
 									});
 
 								comunicator.NotifyAll(command);
-								Log.Trace(JsonConvert.SerializeObject(command, Formatting.Indented));
-
-								string event55Json = JsonConvert.ToString(JsonConvert.SerializeObject(event55, Formatting.Indented));
-								Log.Debug(event55Json);
-								string eventJson = @"{""text"":" + event55Json + "}";
-
-								notifierTasks.Add(
-									httpClient.PostAsync(
-										endPoint,
-										new StringContent(eventJson, System.Text.Encoding.UTF8, "application/json")));
-							}
 
 							if(!isRunning)
 								break;
@@ -123,7 +113,7 @@ namespace CS_EventsServer.Server {
 
 		private void setupNetConfig() {
 			ServicePointManager.DefaultConnectionLimit = 20;
-			foreach(var endPoint in conf.ClientUrls) {
+			foreach(var endPoint in conf.ServersUrls) {
 				var habrServicePoint = ServicePointManager.FindServicePoint(endPoint);
 				habrServicePoint.MaxIdleTime = 100000;
 				habrServicePoint.ConnectionLeaseTimeout = 60000;
@@ -148,8 +138,9 @@ namespace CS_EventsServer.Server {
 		protected virtual void Dispose(bool disposing) {
 			if(!disposedValue) {
 				if(disposing) {
-					unitOfWork.Dispose();
-					httpClient.Dispose();
+					unitOfWork?.Dispose();
+					httpClient?.Dispose();
+					comunicator?.Dispose();
 				}
 
 				disposedValue = true;

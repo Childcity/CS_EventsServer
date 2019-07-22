@@ -4,43 +4,52 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using WebSocketSharp;
 
 namespace CS_EventsServer.Server.Comunication {
 	class ComunicationClient: IComunicator {
+		private readonly string execPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 		private List<WebSocket> serversWS = new List<WebSocket>();
 		
 		public List<Uri> ServersUrls { get; set; } = new List<Uri>();
 
-		private WebSocket findSocketByUrl(Uri url) {
-			return serversWS.Single(ws => ws.Url == url);
-			//return null;
-		}
-
 		public void ConnectSubscribers() {
 			foreach(var serverUrl in ServersUrls) {
-				var ws = new WebSocket(serverUrl.ToString());
-				serversWS.Add(ws);
-
-				ws.Log.Level = LogLevel.Fatal;
-
-				ws.OnOpen += onOpen;
-				ws.OnMessage += onMessage;
-				ws.OnError += onError;
-				ws.OnClose += onClosed;
-				
-				ws.ConnectAsync();
+				connectToServerWS(serverUrl.ToString());
 			}
 		}
 
 		public void NotifyAll(CommandBase command) {
-			serversWS.ForEach(
-				ws => {
-					if(ws.IsAlive)
-						ws.SendAsync(JsonConvert.SerializeObject(command, Formatting.Indented), null);
-				});
+			lock(serversWS) {
+				serversWS.ForEach(
+					ws => {
+						if(ws.IsAlive)
+							ws.SendAsync(JsonConvert.SerializeObject(command, Formatting.Indented), null);
+						else
+							Log.Trace("not ali");
+					});
+			}
+		}
+
+		private void connectToServerWS(string serverUrl) {
+			var ws = new WebSocket(serverUrl);
+
+			ws.Log.Level = LogLevel.Warn;
+			ws.Log.File = execPath + @"\logs\ws_" + DateTime.Now.ToString("yyyy-MM-dd") + ".log";
+
+			ws.OnOpen += onOpen;
+			ws.OnMessage += onMessage;
+			ws.OnError += onError;
+			ws.OnClose += onClosed;
+
+			lock(serversWS) {
+				serversWS.Add(ws);
+			}
+
+			ws.ConnectAsync();
 		}
 
 		private void onMessage(object sender, MessageEventArgs e) {
@@ -48,11 +57,26 @@ namespace CS_EventsServer.Server.Comunication {
 		}
 
 		private void onError(object sender, ErrorEventArgs e) {
-			Log.Warn(e.Message + "\n" + e.Exception.ToString());
+			Log.Warn(((WebSocket)sender).Url + ": " + e.Message + "\n" + e.Exception.ToString());
 		}
 
 		private void onClosed(object sender, CloseEventArgs e) {
-			Log.Warn("Connection with " + ((WebSocket)sender).Url + " was closed: " + e.Reason);
+			WebSocket serverWs = (WebSocket)sender;
+			string serverWSUrl = serverWs.Url.ToString();
+
+			//Log.Warn("Connection with " + serverWSUrl + " was closed: " + e.Reason);
+
+			if(disposedValue) {
+				return;
+			}
+
+			//Log.Debug("Reconnecting to " + serverWSUrl);
+			
+			lock(serversWS) {
+				serversWS.Remove(serverWs);
+			}
+
+			connectToServerWS(serverWSUrl);
 		}
 
 		private void onOpen(object sender, EventArgs e) {
@@ -67,14 +91,10 @@ namespace CS_EventsServer.Server.Comunication {
 			if(!disposedValue) {
 				if(disposing) {
 					if(serversWS != null) {
-						foreach(var ws in serversWS) {
-							ws?.Close();
-						}
-						serversWS.Clear();
+						serversWS?.Clear();
 						serversWS = null;
 					}
 				}
-
 				disposedValue = true;
 			}
 		}

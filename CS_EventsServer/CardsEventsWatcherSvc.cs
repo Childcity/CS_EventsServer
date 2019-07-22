@@ -31,7 +31,10 @@ namespace CS_EventsServer {
 
 		protected override void OnStop() {
 			server.Stop();
-			serverThread.Join(2000);
+
+			if(serverThread.ThreadState == ThreadState.Running)
+				serverThread.Join(2000);
+
 			server.Dispose();
 		}
 	}
