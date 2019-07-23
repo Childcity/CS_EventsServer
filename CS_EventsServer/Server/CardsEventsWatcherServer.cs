@@ -20,13 +20,11 @@ namespace CS_EventsServer.Server {
 		private bool isRunning;
 		private IUnitOfWork unitOfWork;
 		private readonly Configuration conf;
-		private static readonly HttpClient httpClient;
 		private static readonly ComunicationClient comunicator;
 
 		private DateTime lastNotifiedDateTime;
 
 		static CardsEventsWatcherServer() {
-			httpClient = new HttpClient();
 			comunicator = new ComunicationClient();
 		}
 
@@ -48,8 +46,7 @@ namespace CS_EventsServer.Server {
 
 				Log.Info("Trying to get last event from dbo.Event_55");
 				lastNotifiedDateTime = getLastDateTime();
-
-				setupNetConfig();
+				
 			} catch(Exception e) {
 				Log.Fatal("Error ocure, while server starting!\n" + e.ToString());
 				Stop();
@@ -88,13 +85,11 @@ namespace CS_EventsServer.Server {
 									});
 
 								comunicator.NotifyAll(command);
+							}
 
 							if(!isRunning)
 								break;
 						}
-
-						Task.WaitAll(notifierTasks.ToArray());
-
 
 						lastNotifiedDateTime = lastDateTime;
 					}
@@ -109,15 +104,6 @@ namespace CS_EventsServer.Server {
 		public void Stop() {
 			Log.Info("Server has been stopped!");
 			isRunning = false;
-		}
-
-		private void setupNetConfig() {
-			ServicePointManager.DefaultConnectionLimit = 20;
-			foreach(var endPoint in conf.ServersUrls) {
-				var habrServicePoint = ServicePointManager.FindServicePoint(endPoint);
-				habrServicePoint.MaxIdleTime = 100000;
-				habrServicePoint.ConnectionLeaseTimeout = 60000;
-			}
 		}
 
 		private List<Event55> getEvents(DateTime from, DateTime to) {
@@ -139,7 +125,6 @@ namespace CS_EventsServer.Server {
 			if(!disposedValue) {
 				if(disposing) {
 					unitOfWork?.Dispose();
-					httpClient?.Dispose();
 					comunicator?.Dispose();
 				}
 

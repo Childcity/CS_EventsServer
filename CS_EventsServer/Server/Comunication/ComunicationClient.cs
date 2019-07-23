@@ -29,7 +29,7 @@ namespace CS_EventsServer.Server.Comunication {
 						if(ws.IsAlive)
 							ws.SendAsync(JsonConvert.SerializeObject(command, Formatting.Indented), null);
 						else
-							Log.Trace("not ali");
+							Log.Debug("Not alive: " + ws.Url);
 					});
 			}
 		}
@@ -64,14 +64,16 @@ namespace CS_EventsServer.Server.Comunication {
 			WebSocket serverWs = (WebSocket)sender;
 			string serverWSUrl = serverWs.Url.ToString();
 
-			//Log.Warn("Connection with " + serverWSUrl + " was closed: " + e.Reason);
+			Log.Warn("Connection with " + serverWSUrl + " was closed: " + e.Reason);
 
 			if(disposedValue) {
 				return;
 			}
 
-			//Log.Debug("Reconnecting to " + serverWSUrl);
+			Log.Debug("Reconnecting to " + serverWSUrl);
 			
+			serverWs.ConnectAsync();
+
 			lock(serversWS) {
 				serversWS.Remove(serverWs);
 			}
