@@ -14,7 +14,7 @@ namespace CS_EventsServer {
 			ServiceBase[] ServicesToRun;
 			ServicesToRun = new ServiceBase[]
 			{
-				new CardsEventsWatcherSvc()
+				new EventsWatcherSvc()
 			};
 			ServiceBase.Run(ServicesToRun);
 		}

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using WebSocketSharp;
 
 namespace CS_EventsServer.Server.Comunication {
-	class ComunicationClient: IComunicator {
+	class ComunicationClient: ICommunicator {
 		private readonly string execPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 		private List<WebSocket> serversWS = new List<WebSocket>();
 		

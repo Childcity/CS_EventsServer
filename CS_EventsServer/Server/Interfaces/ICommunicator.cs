@@ -2,7 +2,7 @@
 using System;
 
 namespace CS_EventsServer.Server.Interfaces {
-	public interface IComunicator: IDisposable {
+	public interface ICommunicator: IDisposable {
 		void ConnectSubscribers();
 		void NotifyAll(CommandBase command);
 	}

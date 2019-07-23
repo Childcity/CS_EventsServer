@@ -8,11 +8,11 @@ using System.Threading;
 
 namespace CS_EventsServer {
 
-	public partial class CardsEventsWatcherSvc: ServiceBase {
-		private ICardsEventsWatcherServer server;
+	public partial class EventsWatcherSvc: ServiceBase {
+		private IWatcherService watcher;
 		private Thread serverThread;
 
-		public CardsEventsWatcherSvc() {
+		public EventsWatcherSvc() {
 			InitializeComponent();
 			CanStop = true;
 			CanPauseAndContinue = true;
@@ -21,8 +21,8 @@ namespace CS_EventsServer {
 
 		protected override void OnStart(string[] args) {
 			try {
-				server = new CardsEventsWatcherServer();
-				serverThread = new Thread(new ThreadStart(server.Start));
+				watcher = new EventsWatcher();
+				serverThread = new Thread(new ThreadStart(watcher.Start));
 				serverThread.Start();
 			} catch(System.Exception e) {
 				Log.Fatal(e.Message + "\n" + e.StackTrace);
@@ -30,12 +30,12 @@ namespace CS_EventsServer {
 		}
 
 		protected override void OnStop() {
-			server.Stop();
+			watcher.Stop();
 
 			if(serverThread.ThreadState == ThreadState.Running)
 				serverThread.Join(2000);
 
-			server.Dispose();
+			watcher.Dispose();
 		}
 	}
 

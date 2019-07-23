@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace CS_EventsServer.Server.Interfaces {
-	interface ICardsEventsWatcherServer: IDisposable {
+	interface IWatcherService: IDisposable {
 		void Start();
 		void Stop();
 	}

@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace CS_EventsServer.Server {
 
-	public class CardsEventsWatcherServer: ICardsEventsWatcherServer {
+	public class EventsWatcher: IWatcherService {
 		private bool isRunning;
 		private IUnitOfWork unitOfWork;
 		private readonly Configuration conf;
@@ -24,11 +24,11 @@ namespace CS_EventsServer.Server {
 
 		private DateTime lastNotifiedDateTime;
 
-		static CardsEventsWatcherServer() {
+		static EventsWatcher() {
 			comunicator = new ComunicationClient();
 		}
 
-		public CardsEventsWatcherServer() {
+		public EventsWatcher() {
 			conf = new Configuration();
 		}
 

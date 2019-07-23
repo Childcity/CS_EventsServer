@@ -1,5 +1,5 @@
 ﻿namespace CS_EventsServer {
-	partial class CardsEventsWatcherSvc {
+	partial class EventsWatcherSvc {
 		/// <summary> 
 		/// Обязательная переменная конструктора.
 		/// </summary>
@@ -12,7 +12,7 @@
 		protected override void Dispose(bool disposing) {
 			if(disposing && (components != null)) {
 				components.Dispose();
-				server?.Dispose();
+				watcher?.Dispose();
 			}
 			base.Dispose(disposing);
 		}
