@@ -4,7 +4,8 @@ using CS_EventsServer.Server.DAL.Interfaces;
 using CS_EventsServer.Server.DAL.Repositories.SQLServer;
 
 namespace CS_EventsServer.Server.DAL.Repositories {
-	public class EFUnitOfWork :IUnitOfWork {
+
+	public class EFUnitOfWork: IUnitOfWork {
 		private StopNet4Context db;
 		private Event55Repository event55Repository;
 
@@ -19,6 +20,7 @@ namespace CS_EventsServer.Server.DAL.Repositories {
 		}
 
 		#region IDisposable Support
+
 		private bool disposedValue = false;
 
 		protected virtual void Dispose(bool disposing) {
@@ -29,10 +31,11 @@ namespace CS_EventsServer.Server.DAL.Repositories {
 				disposedValue = true;
 			}
 		}
-		
+
 		public void Dispose() {
 			Dispose(true);
 		}
-		#endregion
+
+		#endregion IDisposable Support
 	}
 }

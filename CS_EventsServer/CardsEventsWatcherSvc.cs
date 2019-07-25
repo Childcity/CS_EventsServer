@@ -1,39 +1,79 @@
 ﻿using CS_EventsServer.Server;
 using CS_EventsServer.Server.Interfaces;
 using NLog;
+using System;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.ServiceProcess;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CS_EventsServer {
 
-	public partial class CardsEventsWatcherSvc: ServiceBase {
-		private ICardsEventsWatcherServer server;
-		private Thread serverThread;
+	public partial class EventsWatcherSvc: ServiceBase {
+		private readonly CancellationTokenSource watcherCancTokenSource;
 
-		public CardsEventsWatcherSvc() {
+		public EventsWatcherSvc() {
+			watcherCancTokenSource = new CancellationTokenSource();
 			InitializeComponent();
-			CanStop = true;
+
 			CanPauseAndContinue = true;
+			CanShutdown = true;
+			CanStop = true;
 			AutoLog = false;
 		}
 
-		protected override void OnStart(string[] args) {
+		protected override void OnStart(string[] args) { restart(); base.OnStart(args); }
+
+		protected override void OnContinue() { restart(); base.OnContinue(); }
+
+		protected override void OnPause() { stop(); base.OnPause(); }
+
+		protected override void OnShutdown() { stop(); base.OnShutdown(); }
+
+		protected override void OnStop() { stop(); base.OnStop(); }
+
+		private void restart() {
 			try {
-				server = new CardsEventsWatcherServer();
-				serverThread = new Thread(new ThreadStart(server.Start));
-				serverThread.Start();
-			} catch(System.Exception e) {
-				Log.Fatal(e.Message + "\n" + e.StackTrace);
+				var watcher = new CSEventsServer();
+
+				// Run watcher in new Task, which will be started in new separae thread 
+				Task.Factory.StartNew(() => watcher.Start(watcherCancTokenSource.Token),
+					watcherCancTokenSource.Token,
+					TaskCreationOptions.LongRunning,
+					TaskScheduler.Default)
+				//.Unwrap()
+				.ContinueWith(task => {
+					// if there are uncatched exceptions -> print them
+					if(task.Status == TaskStatus.Faulted)
+						Log.Fatal(task.Exception.ToString());
+					watcher.Dispose();
+				}, TaskContinuationOptions.ExecuteSynchronously);
+
+			} catch(Exception e) {
+				Log.Fatal(e.ToString());
 			}
 		}
 
-		protected override void OnStop() {
-			server.Stop();
-			serverThread.Join(2000);
-			server.Dispose();
+		private void stop() {
+			watcherCancTokenSource.Cancel();
 		}
+
+		#region IDisposable Support
+
+		/// <summary>
+		/// Освободить все используемые ресурсы.
+		/// </summary>
+		/// <param name="disposing">истинно, если управляемый ресурс должен быть удален; иначе ложно.</param>
+		protected override void Dispose(bool disposing) {
+			if(disposing && (components != null)) {
+				components.Dispose();
+				watcherCancTokenSource?.Dispose();
+			}
+			base.Dispose(disposing);
+		}
+
+		#endregion IDisposable Support
 	}
 
 	public static class Log {
