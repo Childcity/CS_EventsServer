@@ -3,8 +3,10 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CS_EventsServer.Server.DAL.Entities {
+
 	[Table("tblEvents_55", Schema = "dbo")]
 	public class Event55 {
+
 		[Column("colEventNumber"), Required]
 		public decimal EventNumber { get; set; }
 
@@ -28,13 +30,13 @@ namespace CS_EventsServer.Server.DAL.Entities {
 
 		[Column("colStartZoneID")]
 		public int? StartZoneID { get; set; }
-		
+
 		[Column("colTargetZoneID")]
 		public int? TargetZoneID { get; set; }
 
 		[Column("colDirection")]
 		public byte? Direction { get; set; }
-		
+
 		[Column("colCardNumber")]
 		public decimal? CardNumber { get; set; }
 

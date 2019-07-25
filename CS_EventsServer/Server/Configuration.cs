@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CS_EventsServer.Server.Interfaces;
+using System;
 using System.Configuration;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CS_EventsServer.Server {
-	class Configuration {
-		public List<Uri> ServersUrls { get; private set; } = new List<Uri>();
-		public string ConnectionString = default;
 
-		public void Load() {
+	internal class ServerConfiguration: AConfiguration {
+
+		public override void Load() {
 			ConnectionString = ConfigurationManager.ConnectionStrings["SqlServ"]?.ConnectionString;
-			string clientDomeins = ConfigurationManager.AppSettings["ServersUrls"];
-			string[] clientsUrlsStr = clientDomeins?.Split(';').Select(s => s.Trim()).ToArray();
+			string ServersUrlsString = ConfigurationManager.AppSettings["ServersUrls"];
+			string[] clientsUrlsStr = ServersUrlsString?.Split(';').Select(s => s.Trim()).ToArray();
 
 			if(clientsUrlsStr != null)
 				foreach(var client in clientsUrlsStr) {
@@ -25,6 +22,5 @@ namespace CS_EventsServer.Server {
 					}
 				}
 		}
-
 	}
 }
