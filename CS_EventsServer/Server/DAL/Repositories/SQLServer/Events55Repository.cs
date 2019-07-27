@@ -7,10 +7,10 @@ using System.Data.Entity;
 
 namespace CS_EventsServer.Server.DAL.Repositories.SQLServer {
 
-	internal class Event55Repository: IRepository<Event55> {
+	internal class Events55Repository: IRepository<Event55> {
 		private StopNet4Context db;
 
-		public Event55Repository(StopNet4Context dbContext) {
+		public Events55Repository(StopNet4Context dbContext) {
 			db = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 		}
 
