@@ -24,7 +24,8 @@ namespace CS_EventsServer.Server {
 
 				Log.Info("ConnectionString: " + conf.ConnectionString);
 				Log.Info("ServersUrls Count: " + conf.ServersUrls.Count);
-				//unitOfWork = new EFUnitOfWork(conf.ConnectionString);
+				unitOfWork = new EFUnitOfWork(conf.ConnectionString);
+
 
 				eventsWatcher = new EventsWatcher(conf);
 
