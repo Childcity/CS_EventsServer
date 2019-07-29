@@ -1,0 +1,32 @@
+USE [StopNet4]
+GO
+
+INSERT INTO [dbo].[tblEvents_55]
+           ([colEventNumber]
+           ,[colEventCode]
+		   ,[colGeneratorID]
+		   ,colInitiatorID
+		   ,colAccountID
+		   ,colHolderID
+		   ,colControlPointID
+		   ,colStartZoneID
+		   ,colTargetZoneID
+		   ,colDirection
+		   ,colCardNumber
+		   ,colGroupID
+           ,[colEventTime])
+     VALUES
+           ((SELECT TOP 1 [colEventNumber] FROM [StopNet4].[dbo].[tblEvents_55] ORDER BY [colEventNumber] DESC) + 1,
+			105, 
+			14,
+			24,
+			157,
+			1, --colHolderID
+			24,
+			1,
+			2,
+			1,
+			ABS(CHECKSUM(NEWID()) % 999999999999),
+			133,
+			DATEADD(YEAR, 1, GETDATE()))
+GO

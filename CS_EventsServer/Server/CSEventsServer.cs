@@ -6,13 +6,13 @@ using System;
 using System.Linq;
 using System.Data.Linq;
 using System.Threading;
+using CS_EventsServer.Server.BLL.Services;
 
 namespace CS_EventsServer.Server {
 
 	public class CSEventsServer: IDisposable {
 		private static readonly ServerConfiguration conf;
-		EventsWatcher eventsWatcher;
-		private IUnitOfWork unitOfWork;
+		private EventsWatcher eventsWatcher;
 
 		static CSEventsServer() {
 			conf = new ServerConfiguration();
@@ -24,7 +24,6 @@ namespace CS_EventsServer.Server {
 
 				Log.Info("ConnectionString: " + conf.ConnectionString);
 				Log.Info("ServersUrls Count: " + conf.ServersUrls.Count);
-				//unitOfWork = new EFUnitOfWork(conf.ConnectionString);
 
 				eventsWatcher = new EventsWatcher(conf);
 
@@ -45,10 +44,8 @@ namespace CS_EventsServer.Server {
 		protected virtual void Dispose(bool disposing) {
 			if(!disposedValue) {
 				if(disposing) {
-					try {} finally {
-						eventsWatcher?.Dispose();
-						eventsWatcher = null;
-					}
+					eventsWatcher?.Dispose();
+					eventsWatcher = null;
 				}
 				Log.Trace($"Disposed: {ToString()}\n\n");
 				disposedValue = true;
