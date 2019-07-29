@@ -2,8 +2,8 @@
 using CS_EventsServer.Server.DAL.Entities;
 using CS_EventsServer.Server.DAL.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Data.Entity;
-using System.Linq;
 
 namespace CS_EventsServer.Server.DAL.Repositories.SQLServer {
 
@@ -14,7 +14,7 @@ namespace CS_EventsServer.Server.DAL.Repositories.SQLServer {
 			db = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 		}
 
-		public IQueryable<Zone55> GetAll(bool asNoTracking) {
+		public IEnumerable<Zone55> GetAll(bool asNoTracking) {
 			return asNoTracking ? db.Zones55.AsNoTracking() : db.Zones55;
 		}
 

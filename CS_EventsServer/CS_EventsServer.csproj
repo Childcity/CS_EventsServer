@@ -148,7 +148,6 @@
     <Compile Include="CardsEventsWatcherSvc.Designer.cs">
       <DependentUpon>CardsEventsWatcherSvc.cs</DependentUpon>
     </Compile>
-    <Compile Include="Server\BLL\Services\EventService.cs" />
     <Compile Include="Server\Communication\Commands\CommandBase.cs" />
     <Compile Include="Server\Communication\Commands\RequestPushEvent.cs" />
     <Compile Include="Server\Communication\CommunicationClient.cs" />
@@ -177,6 +176,7 @@
     <Compile Include="Server\DAL\Repositories\SQLServer\Events55Repository.cs" />
     <Compile Include="Server\DTO\EventDTO.cs" />
     <Compile Include="Server\Interfaces\AConfiguration.cs" />
+    <Compile Include="Server\Interfaces\Enumerable.cs" />
     <Compile Include="Server\Interfaces\ICommunicator.cs" />
     <Compile Include="Server\Interfaces\IConfiguration.cs" />
     <Compile Include="Server\Services\EventsWatcher.cs" />
