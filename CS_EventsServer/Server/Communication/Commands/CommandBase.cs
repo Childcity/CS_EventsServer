@@ -15,6 +15,7 @@ namespace CS_EventsServer.Server.Comunication.Commands {
 		public object Params { get; set; }
 
 		public CommandBase(string name) {
+			this.name = name;
 			Command = GetType().Name;
 			CommandId = Guid.NewGuid();
 			TimeStamp = DateTime.Now;

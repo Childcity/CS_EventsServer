@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace CS_EventsServer.Server.DAL.Interfaces {
 
 	public interface IRepository<T>
 		where T : class {
 
-		IEnumerable<T> GetAll(bool asNoTracking = false);
+		IQueryable<T> GetAll(bool asNoTracking = false);
 
 		T Get(int id);
 
