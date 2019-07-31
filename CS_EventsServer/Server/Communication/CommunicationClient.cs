@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using WebSocketSharp;
 
 namespace CS_EventsServer.Server.Comunication {
@@ -14,11 +15,26 @@ namespace CS_EventsServer.Server.Comunication {
 		private readonly string execPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 		private List<WebSocket> serversWS = new List<WebSocket>();
 
+		private System.Timers.Timer timer;
+
 		public List<Uri> ServersUrls { get; set; } = new List<Uri>();
 
 		public void ConnectSubscribers() {
 			foreach(var serverUrl in ServersUrls) {
 				connectToServerWS(serverUrl.ToString());
+			}
+			
+			timer = new System.Timers.Timer(10000);
+			timer.Elapsed += onTimerElapsed;
+			timer.Start();	
+		}
+
+		private void onTimerElapsed(object source, ElapsedEventArgs e) {
+			lock(serversWS) {
+				serversWS.ForEach(ws => {
+					bool ping = ws.Ping();
+					//Log.Trace("Server " + ws.Url + " Ping: " + ping);
+				});
 			}
 		}
 
@@ -113,8 +129,15 @@ namespace CS_EventsServer.Server.Comunication {
 								try { ws.CloseAsync(CloseStatusCode.Normal); } finally { ws = null; }
 							}
 						});
+
 						serversWS.Clear();
 						serversWS = null;
+					}
+
+					try { timer.Stop(); } finally {
+						timer.Elapsed -= onTimerElapsed;
+						timer.Dispose();
+						timer = null;
 					}
 				}
 

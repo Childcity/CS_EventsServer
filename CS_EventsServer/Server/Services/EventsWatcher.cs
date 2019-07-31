@@ -46,16 +46,16 @@ namespace CS_EventsServer.Server.Services {
 		}
 
 		private void onError(object sender, ErrorEventArgs e) {
-			Log.Debug("SqlTableDependency onError: " + e.Error?.Message);
+			Log.Warn("SqlTableDependency onError: " + e.Error?.Message);
 		}
 
 		private void onStatusChanged(object sender, StatusChangedEventArgs e) {
-			Log.Debug("SqlTableDependency onStatusChanged: " + e.Status.ToString());
+			Log.Trace("SqlTableDependency onStatusChanged: " + e.Status.ToString());
 		}
 
 		private async Task onChanged(object sender, object evArgs) {
 			try { 
-				Log.Debug("SqlTableDependency onChanged");
+				Log.Trace("SqlTableDependency onChanged");
 
 				if(evArgs is RecordChangedEventArgs<Event55>) {
 					var concreteEvArgs = evArgs as RecordChangedEventArgs<Event55>;
@@ -69,7 +69,7 @@ namespace CS_EventsServer.Server.Services {
 					await comunicator.NotifyAll(new RequestPushEvent(eventDTO), cancellationToken);
 				}
 			} catch(Exception e) {
-				Log.Trace(e.Message + "\n" + e.StackTrace);
+				Log.Warn(e.Message + "\n" + e.StackTrace);
 			}
 		}
 
@@ -85,7 +85,7 @@ namespace CS_EventsServer.Server.Services {
 					} finally {
 						comunicator?.Dispose();
 
-						if(event55Wtch != null && event55Wtch.Dependancy != null) {
+						if(event55Wtch?.Dependancy != null) {
 							event55Wtch.Dependancy.OnChanged -= onChangedEvent55EventHandler;
 							event55Wtch.Dependancy.OnStatusChanged -= onStatusChanged;
 							event55Wtch.Dependancy.OnError -= onError;
