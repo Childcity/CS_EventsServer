@@ -25,7 +25,7 @@ namespace CS_EventsServer.Server {
 				Log.Info("ConnectionString: " + conf.ConnectionString);
 				Log.Info("ServersUrls Count: " + conf.ServersUrls.Count);
 
-				eventsWatcher = new EventsWatcher(conf);
+				eventsWatcher = new EventsWatcher(conf, cancellationToken);
 
 			} catch(Exception e) {
 				Log.Fatal("Error ocure, while server starting!\n" + e.ToString());

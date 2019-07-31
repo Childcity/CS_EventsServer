@@ -13,24 +13,11 @@ namespace CS_EventsServer.Server.DAL {
 	public class EntitieWatcher<EntType>: IDisposable where EntType : class, new() {
 		public SqlTableDependency<EntType> Dependancy { get; private set; } = null;
 
-		public EntitieWatcher(string connectionString,
-			Expression<Func<EntType, bool>> filter = null) {
+		public EntitieWatcher(string connectionString, Expression<Func<EntType, bool>> filter = null) {
 			Type entType = new EntType().GetType(); // temporary instance of <EntType> for getting type of EntType in runtime!
 
 			try {
-				// Get table Attribute for explore Name and Schema of table
-				TableAttribute tableAttribute = entType.GetCustomAttribute<TableAttribute>(false);
-				Log.Trace("Mapping entitie [" + entType.Name + "] ---> " + tableAttribute?.Name);
-
-				// Construct mapper from attributes, that should be in Entitie class
-				ModelToTableMapper<EntType> mapper = getMapperFromEntitieAtributes(ref entType);
-
-				Dependancy = new SqlTableDependency<EntType>(
-					connectionString,
-					tableAttribute?.Name ?? entType.Name,
-					tableAttribute?.Schema ?? "dbo",
-					mapper, filter: new SqlTableDependencyFilter<EntType>(filter, mapper)
-				);
+				initDependancy(connectionString, filter, entType);
 			} catch(ServiceBrokerNotEnabledException servBrEx) {
 				try {
 					// Get database name for enabaling broker for this db
@@ -46,12 +33,31 @@ namespace CS_EventsServer.Server.DAL {
 							conn.Close();
 						}
 					}
+
+					initDependancy(connectionString, filter, entType);
 				} catch(Exception e) {
 					throw new ArgumentException($"ServiceBroker can't be enabled. ---> [{e.Message}] ---> [{servBrEx.Message}]. See Inner Exeption!", e);
 				}
 			} catch(Exception e) {
 				throw new ArgumentException($"EntitieWatcher<{entType.Name}> can't setup SqlTableDependency<{entType.Name}> with type <{entType.Name}>. Provide <EntType> with attributes for Entitie Framework.", e);
 			}
+		}
+
+		private void initDependancy(string connectionString, Expression<Func<EntType, bool>> filter, Type entType) {
+
+			// Get table Attribute for explore Name and Schema of table
+			TableAttribute tableAttribute = entType.GetCustomAttribute<TableAttribute>(false);
+			Log.Trace("Mapping entitie [" + entType.Name + "] ---> " + tableAttribute?.Name);
+
+			// Construct mapper from attributes, that should be in Entitie class
+			ModelToTableMapper<EntType> mapper = getMapperFromEntitieAtributes(ref entType);
+
+			Dependancy = new SqlTableDependency<EntType>(
+				connectionString,
+				tableAttribute?.Name ?? entType.Name,
+				tableAttribute?.Schema ?? "dbo",
+				mapper, filter: new SqlTableDependencyFilter<EntType>(filter, mapper)
+			);
 		}
 
 		public void Start() {

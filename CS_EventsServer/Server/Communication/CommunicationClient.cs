@@ -33,9 +33,9 @@ namespace CS_EventsServer.Server.Comunication {
 							if(ws.IsAlive)
 								ws.SendAsync(JsonConvert.SerializeObject(command, Formatting.Indented), null);
 							else
-								Log.Trace("Not alive: " + ws.Url);
+								Log.Trace("Server doesn't alive: " + ws.Url);
 
-							Log.Trace(JsonConvert.SerializeObject(command, Formatting.Indented));
+							Log.Trace("Sending to server: " + JsonConvert.SerializeObject(command, Formatting.Indented));
 						});
 				}
 			}, cancellationToken);
@@ -60,11 +60,11 @@ namespace CS_EventsServer.Server.Comunication {
 		}
 
 		private void onMessage(object sender, MessageEventArgs e) {
-			Log.Trace(e.Data);
+			Log.Trace("onMessage: " + e.Data);
 		}
 
 		private void onError(object sender, ErrorEventArgs e) {
-			Log.Warn(((WebSocket)sender).Url + ": " + e.Message + "\n" + e.Exception.ToString());
+			Log.Warn("onError: " + ((WebSocket)sender).Url + ": " + e.Message + "\n" + e.Exception.ToString());
 		}
 
 		private void onClosed(object sender, CloseEventArgs e) {
