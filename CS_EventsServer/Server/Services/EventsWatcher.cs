@@ -16,7 +16,7 @@ namespace CS_EventsServer.Server.Services {
 
 	public class EventsWatcher: IDisposable {
 		private static readonly ComunicationClient comunicator;
-		private CancellationTokenSource tokenSource;
+		private readonly CancellationToken cancellationToken;
 		private EntitieWatcher<Event55> event55Wtch;
 		private EventService eventService;
 
@@ -26,15 +26,16 @@ namespace CS_EventsServer.Server.Services {
 			comunicator = new ComunicationClient();
 		}
 
-		public EventsWatcher(AConfiguration conf) {
-			tokenSource = new CancellationTokenSource();
-			eventService = new EventService(conf.ConnectionString, tokenSource.Token);
+		public EventsWatcher(AConfiguration conf, CancellationToken token) {
+			cancellationToken = token;
 
 			// setup comunication with bot servers
 			comunicator.ServersUrls = conf.ServersUrls;
 			comunicator.ConnectSubscribers();
 
-			event55Wtch = new EntitieWatcher<Event55>(conf.ConnectionString, null);
+			eventService = new EventService(conf.ConnectionString, cancellationToken);
+
+			event55Wtch = new EntitieWatcher<Event55>(conf.ConnectionString, filter: event55 => event55.EventCode == 105);
 			onChangedEvent55EventHandler = new ChangedEventHandler<Event55>(async (s, e) => await onChanged(s, e));
 
 			event55Wtch.Dependancy.OnChanged += onChangedEvent55EventHandler;
@@ -65,7 +66,7 @@ namespace CS_EventsServer.Server.Services {
 					var event55 = concreteEvArgs.Entity;
 					EventDTO eventDTO = await eventService.GetEventInfo(event55);
 
-					await comunicator.NotifyAll(new RequestPushEvent(eventDTO), tokenSource.Token);
+					await comunicator.NotifyAll(new RequestPushEvent(eventDTO), cancellationToken);
 				}
 			} catch(Exception e) {
 				Log.Trace(e.Message + "\n" + e.StackTrace);
@@ -81,7 +82,6 @@ namespace CS_EventsServer.Server.Services {
 			if(!disposedValue) {
 				if(disposing) {
 					try {
-						tokenSource?.Cancel();
 					} finally {
 						comunicator?.Dispose();
 
@@ -94,10 +94,8 @@ namespace CS_EventsServer.Server.Services {
 						}
 
 						eventService?.Dispose();
-						tokenSource?.Dispose(); // should be disposed last!
 						eventService = null;
 						onChangedEvent55EventHandler = null;
-						tokenSource = null;
 					}
 				}
 				Log.Trace($"Disposed: {ToString()}");
