@@ -3,7 +3,9 @@
 namespace CS_EventsServer.Server.Comunication.Commands {
 
 	public class RequestPushEvent: CommandBase {
-		public RequestPushEvent() : base("PushEventToRemoteServer") { }
+		public static string Name { get => typeof(RequestPushEvent).Name; }
+
+		public RequestPushEvent() : base(Name) { }
 
 		public RequestPushEvent(EventDTO eventDTO) {
 			Params = eventDTO;

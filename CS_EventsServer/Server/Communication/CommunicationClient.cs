@@ -24,7 +24,7 @@ namespace CS_EventsServer.Server.Comunication {
 				connectToServerWS(serverUrl.ToString());
 			}
 			
-			timer = new System.Timers.Timer(10000);
+			timer = new System.Timers.Timer(1000);
 			timer.Elapsed += onTimerElapsed;
 			timer.Start();	
 		}

@@ -3,22 +3,25 @@ using System;
 
 namespace CS_EventsServer.Server.Comunication.Commands {
 
-	public class CommandBase {
+	public partial class CommandBase {
 
 		[JsonIgnore]
 		private readonly string name;
 		
 		public string Command { get; set; }
-		public Guid CommandId { get; set; }
-		public DateTime TimeStamp { get; set; }
 
+		public Guid CommandId { get; set; }
+
+		public DateTimeOffset TimeStamp { get; set; }
+
+		// Field contain parameters from each command
 		public object Params { get; set; }
 
 		public CommandBase(string name) {
 			this.name = name;
 			Command = GetType().Name;
 			CommandId = Guid.NewGuid();
-			TimeStamp = DateTime.Now;
+			TimeStamp = DateTimeOffset.Now;
 		}
 
 		public CommandBase() : this(typeof(CommandBase).Name) { }
@@ -26,5 +29,15 @@ namespace CS_EventsServer.Server.Comunication.Commands {
 		public override string ToString() {
 			return name;
 		}
+	}
+
+	public partial class CommandBase {
+		
+		public static CommandBase FromJson(string json) => JsonConvert.DeserializeObject<CommandBase>(json, JsonConverterSettings.Settings);
+	}
+
+	public static class SerializeCommandBase {
+
+		public static string ToJson(this CommandBase self) => JsonConvert.SerializeObject(self, JsonConverterSettings.Settings);
 	}
 }
