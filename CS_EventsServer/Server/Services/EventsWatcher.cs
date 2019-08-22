@@ -15,7 +15,7 @@ using TableDependency.SqlClient.Base.EventArgs;
 namespace CS_EventsServer.Server.Services {
 
 	public class EventsWatcher: IDisposable {
-		private static readonly ComunicationClient comunicator;
+		private static readonly ICommunicator comunicator;
 		private readonly CancellationToken cancellationToken;
 		private EntitieWatcher<Event55> event55Wtch;
 		private EventService eventService;
@@ -31,6 +31,7 @@ namespace CS_EventsServer.Server.Services {
 
 			// setup comunication with bot servers
 			comunicator.ServersUrls = conf.ServersUrls;
+			comunicator.OnRequest += onServerRequest;
 			comunicator.ConnectSubscribers();
 
 			eventService = new EventService(conf.ConnectionString, cancellationToken);
@@ -43,6 +44,10 @@ namespace CS_EventsServer.Server.Services {
 			event55Wtch.Dependancy.OnError += onError;
 
 			event55Wtch.Start();
+		}
+		
+		private void onServerRequest(object sender, CommandBase command) {
+
 		}
 
 		private void onError(object sender, ErrorEventArgs e) {
@@ -83,6 +88,7 @@ namespace CS_EventsServer.Server.Services {
 				if(disposing) {
 					try {
 					} finally {
+						comunicator.OnRequest -= onServerRequest;
 						comunicator?.Dispose();
 
 						if(event55Wtch?.Dependancy != null) {

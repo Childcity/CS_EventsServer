@@ -15,27 +15,21 @@ namespace CS_EventsServer.Server.Comunication {
 		private readonly string execPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 		private List<WebSocket> serversWS = new List<WebSocket>();
 
-		private System.Timers.Timer timer;
+		// server ping timer
+		private System.Timers.Timer heartBeatTimer;
 
 		public List<Uri> ServersUrls { get; set; } = new List<Uri>();
+
+		public event EventHandler<CommandBase> OnRequest;
 
 		public void ConnectSubscribers() {
 			foreach(var serverUrl in ServersUrls) {
 				connectToServerWS(serverUrl.ToString());
 			}
 			
-			timer = new System.Timers.Timer(1000);
-			timer.Elapsed += onTimerElapsed;
-			timer.Start();	
-		}
-
-		private void onTimerElapsed(object source, ElapsedEventArgs e) {
-			lock(serversWS) {
-				serversWS.ForEach(ws => {
-					bool ping = ws.Ping();
-					//Log.Trace("Server " + ws.Url + " Ping: " + ping);
-				});
-			}
+			heartBeatTimer = new System.Timers.Timer(1000);
+			heartBeatTimer.Elapsed += onTimerElapsed;
+			heartBeatTimer.Start();	
 		}
 
 		public Task NotifyAll(CommandBase command, CancellationToken cancellationToken) {
@@ -77,6 +71,9 @@ namespace CS_EventsServer.Server.Comunication {
 
 		private void onMessage(object sender, MessageEventArgs e) {
 			Log.Trace("onMessage: " + e.Data);
+			if(e.IsText) {
+				OnRequest?.Invoke(this, CommandBase.FromJson(e.Data));
+			}
 		}
 
 		private void onError(object sender, ErrorEventArgs e) {
@@ -108,8 +105,16 @@ namespace CS_EventsServer.Server.Comunication {
 		}
 
 		private void onOpen(object sender, EventArgs e) {
-			// send Auth request
-			// create list with auth clients
+			Log.Trace("WS connection opened");
+		}
+
+		private void onTimerElapsed(object source, ElapsedEventArgs e) {
+			lock(serversWS) {
+				serversWS.ForEach(ws => {
+					bool ping = ws.Ping();
+					//Log.Trace("Server " + ws.Url + " Ping: " + ping);
+				});
+			}
 		}
 
 		#region IDisposable Support
@@ -134,10 +139,10 @@ namespace CS_EventsServer.Server.Comunication {
 						serversWS = null;
 					}
 
-					try { timer.Stop(); } finally {
-						timer.Elapsed -= onTimerElapsed;
-						timer.Dispose();
-						timer = null;
+					try { heartBeatTimer.Stop(); } finally {
+						heartBeatTimer.Elapsed -= onTimerElapsed;
+						heartBeatTimer.Dispose();
+						heartBeatTimer = null;
 					}
 				}
 
