@@ -91,6 +91,9 @@ namespace CS_EventsServer.Server.BLL.Services {
 		}
 
 		public async Task<HolderLocationDTO> GetHolderLocations(HolderLocationPeriodDTO locationPeriod) {
+			DateTime startTime = locationPeriod.TimePeriod.StartTime.Value.LocalDateTime;
+			DateTime endTime = locationPeriod.TimePeriod.EndTime.Value.LocalDateTime;
+
 			var query = from ev in unitOfWork.Events55.GetAll(true)
 						join startZone55 in unitOfWork.Zones55.GetAll(true) on ev.StartZoneID equals startZone55.colID into startZone55_temp
 						join targetZone55 in unitOfWork.Zones55.GetAll(true) on ev.StartZoneID equals targetZone55.colID into targetZone55_temp
@@ -113,7 +116,7 @@ namespace CS_EventsServer.Server.BLL.Services {
 						from controlPoint in controlPoint_temp.DefaultIfEmpty()
 						from holder in holder_temp.DefaultIfEmpty()
 
-						where	(
+						where	((
 									holder.Name.ToLower().Contains(locationPeriod.HolderName.ToLower()) 
 									&& holder.Middlename.ToLower().Contains(locationPeriod.HolderMiddlename.ToLower())
 									&& holder.Surname.ToLower().Contains(locationPeriod.HolderSurname.ToLower())
@@ -121,10 +124,9 @@ namespace CS_EventsServer.Server.BLL.Services {
 								(
 									holder.Name.ToLower().Contains(locationPeriod.HolderName.ToLower())
 									&& holder.Surname.ToLower().Contains(locationPeriod.HolderSurname.ToLower())
-								)
-
-								&& ev.EventTime >= locationPeriod.TimePeriod.StartTime
-								&& ev.EventTime <= locationPeriod.TimePeriod.EndTime
+								))
+								&& ev.EventTime >= startTime
+								&& ev.EventTime <= endTime
 
 						orderby ev.EventTime
 
@@ -144,7 +146,7 @@ namespace CS_EventsServer.Server.BLL.Services {
 				eventsInfos.Add(new EventInfoDTO() {
 					Direction = eventInfo.Event55.Direction,
 					EventCode = eventInfo.Event55.EventCode,
-					EventTime = eventInfo.Event55.EventTime,
+					EventTime = eventInfo.Event55.EventTime.ToUniversalTime(),
 
 					StartAreaName = eventInfo.StartZone.colName,
 					TargetAreaName = eventInfo.TargetZone.colName,
