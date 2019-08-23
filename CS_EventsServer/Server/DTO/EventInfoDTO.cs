@@ -10,7 +10,7 @@ namespace CS_EventsServer.Server.DTO {
 
 		public byte? Direction { get; set; }
 
-		public DateTime? EventTime { get; set; }
+		public DateTimeOffset? EventTime { get; set; }
 		
 		//
 

@@ -149,6 +149,7 @@
       <DependentUpon>CardsEventsWatcherSvc.cs</DependentUpon>
     </Compile>
     <Compile Include="Server\BLL\Services\EventService.cs" />
+    <Compile Include="Server\BLL\StringExtensions.cs" />
     <Compile Include="Server\Communication\Commands\CommandBase.cs" />
     <Compile Include="Server\Communication\Commands\RequestPushEvent.cs" />
     <Compile Include="Server\Communication\Commands\RequestHolderLocation.cs" />

@@ -72,7 +72,11 @@ namespace CS_EventsServer.Server.Comunication {
 		private void onMessage(object sender, MessageEventArgs e) {
 			Log.Trace("onMessage: " + e.Data);
 			if(e.IsText) {
-				OnRequest?.Invoke(this, CommandBase.FromJson(e.Data));
+				var command = CommandBase.FromJson(e.Data);
+				var receivers = OnRequest.GetInvocationList();
+				foreach(EventHandler<CommandBase> receiver in receivers) {
+					OnRequest?.BeginInvoke(this, command, null, null);
+				}
 			}
 		}
 
