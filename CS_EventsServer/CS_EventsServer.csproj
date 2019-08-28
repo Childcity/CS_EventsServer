@@ -183,6 +183,7 @@
     <Compile Include="Server\DTO\EventInfoDTO.cs" />
     <Compile Include="Server\DTO\HolderLocationDTO.cs" />
     <Compile Include="Server\DTO\HolderLocationPeriodDTO.cs" />
+    <Compile Include="Server\DTO\QueryType.cs" />
     <Compile Include="Server\DTO\TimePeriodDTO.cs" />
     <Compile Include="Server\Interfaces\AConfiguration.cs" />
     <Compile Include="Server\Interfaces\ICommunicator.cs" />

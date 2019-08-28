@@ -55,7 +55,11 @@ namespace CS_EventsServer.Server.Services {
 
 				if(cmdType == RequestHolderLocation.Name) {
 					HolderLocationPeriodDTO holderLocationPeriod = HolderLocationPeriodDTO.FromObject(command.Params);
+
 					var holderLocationDTO = eventService.GetHolderLocations(holderLocationPeriod).Result;
+					holderLocationDTO.QueryType = holderLocationPeriod.QueryType;
+					holderLocationDTO.IsHolderIn = holderLocationPeriod.IsHolderIn;
+
 					var response = new ResponseHolderLocation(holderLocationDTO);
 					comunicator.NotifyAll(response, cancellationToken);
 				}

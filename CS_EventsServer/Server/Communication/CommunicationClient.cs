@@ -41,11 +41,11 @@ namespace CS_EventsServer.Server.Comunication {
 								return;
 
 							if(ws.IsAlive)
-								ws.SendAsync(JsonConvert.SerializeObject(command, Formatting.Indented), null);
+								ws.SendAsync(command.ToJson(), null);
 							else
 								Log.Trace("Server doesn't alive: " + ws.Url);
 
-							Log.Trace("Sending to server: " + JsonConvert.SerializeObject(command, Formatting.Indented));
+							Log.Trace("Sending to server: " + command.ToJson(true));
 						});
 				}
 			}, cancellationToken);

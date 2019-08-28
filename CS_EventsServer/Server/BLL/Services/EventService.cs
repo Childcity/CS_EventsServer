@@ -94,6 +94,8 @@ namespace CS_EventsServer.Server.BLL.Services {
 			DateTime startTime = locationPeriod.TimePeriod.StartTime.Value.LocalDateTime;
 			DateTime endTime = locationPeriod.TimePeriod.EndTime.Value.LocalDateTime;
 
+			Log.Trace("from: " + startTime.ToString() + "    to: " + endTime.ToString());
+
 			var query = from ev in unitOfWork.Events55.GetAll(true)
 						join startZone55 in unitOfWork.Zones55.GetAll(true) on ev.StartZoneID equals startZone55.colID into startZone55_temp
 						join targetZone55 in unitOfWork.Zones55.GetAll(true) on ev.StartZoneID equals targetZone55.colID into targetZone55_temp
@@ -128,7 +130,7 @@ namespace CS_EventsServer.Server.BLL.Services {
 								&& ev.EventTime >= startTime
 								&& ev.EventTime <= endTime
 
-						orderby ev.EventTime
+						orderby ev.EventTime descending 
 
 						select new {
 							Event55 = ev,
