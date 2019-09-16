@@ -1,6 +1,5 @@
 ﻿using CS_EventsServer.Server.Comunication.Commands;
 using CS_EventsServer.Server.Interfaces;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
