@@ -1,12 +1,6 @@
-﻿using CS_EventsServer.Server.DAL.Entities;
-using CS_EventsServer.Server.DAL.Interfaces;
-using CS_EventsServer.Server.DAL.Repositories;
 using CS_EventsServer.Server.Services;
 using System;
-using System.Linq;
-using System.Data.Linq;
 using System.Threading;
-using CS_EventsServer.Server.BLL.Services;
 
 namespace CS_EventsServer.Server {
 
@@ -26,8 +20,7 @@ namespace CS_EventsServer.Server {
 				Log.Info("ServersUrls Count: " + conf.ServersUrls.Count);
 
 				eventsWatcher = new EventsWatcher(conf, cancellationToken);
-
-			} catch(Exception e) {
+			} catch (Exception e) {
 				Log.Fatal("Error ocure, while server starting!\n" + e.ToString());
 				return;
 			}
@@ -42,8 +35,8 @@ namespace CS_EventsServer.Server {
 		private bool disposedValue = false;
 
 		protected virtual void Dispose(bool disposing) {
-			if(!disposedValue) {
-				if(disposing) {
+			if (!disposedValue) {
+				if (disposing) {
 					eventsWatcher?.Dispose();
 					eventsWatcher = null;
 				}

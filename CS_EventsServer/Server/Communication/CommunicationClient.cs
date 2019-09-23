@@ -1,11 +1,11 @@
-﻿using CS_EventsServer.Server.Comunication.Commands;
+using CS_EventsServer.Server.Comunication.Commands;
 using CS_EventsServer.Server.Interfaces;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using WebSocketSharp;
 
 namespace CS_EventsServer.Server.Comunication {
@@ -14,12 +14,21 @@ namespace CS_EventsServer.Server.Comunication {
 		private readonly string execPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 		private List<WebSocket> serversWS = new List<WebSocket>();
 
+		// server ping timer
+		private System.Timers.Timer heartBeatTimer;
+
 		public List<Uri> ServersUrls { get; set; } = new List<Uri>();
+
+		public event EventHandler<CommandBase> OnRequest;
 
 		public void ConnectSubscribers() {
 			foreach(var serverUrl in ServersUrls) {
 				connectToServerWS(serverUrl.ToString());
 			}
+			
+			heartBeatTimer = new System.Timers.Timer(1000);
+			heartBeatTimer.Elapsed += onTimerElapsed;
+			heartBeatTimer.Start();	
 		}
 
 		public Task NotifyAll(CommandBase command, CancellationToken cancellationToken) {
@@ -31,11 +40,11 @@ namespace CS_EventsServer.Server.Comunication {
 								return;
 
 							if(ws.IsAlive)
-								ws.SendAsync(JsonConvert.SerializeObject(command, Formatting.Indented), null);
+								ws.SendAsync(command.ToJson(), null);
 							else
 								Log.Trace("Server doesn't alive: " + ws.Url);
 
-							Log.Trace("Sending to server: " + JsonConvert.SerializeObject(command, Formatting.Indented));
+							Log.Trace("Sending to server: " + command.ToJson(true));
 						});
 				}
 			}, cancellationToken);
@@ -61,6 +70,13 @@ namespace CS_EventsServer.Server.Comunication {
 
 		private void onMessage(object sender, MessageEventArgs e) {
 			Log.Trace("onMessage: " + e.Data);
+			if(e.IsText) {
+				var command = CommandBase.FromJson(e.Data);
+				var receivers = OnRequest.GetInvocationList();
+				foreach(EventHandler<CommandBase> receiver in receivers) {
+					OnRequest?.BeginInvoke(this, command, null, null);
+				}
+			}
 		}
 
 		private void onError(object sender, ErrorEventArgs e) {
@@ -92,8 +108,16 @@ namespace CS_EventsServer.Server.Comunication {
 		}
 
 		private void onOpen(object sender, EventArgs e) {
-			// send Auth request
-			// create list with auth clients
+			Log.Trace("WS connection opened");
+		}
+
+		private void onTimerElapsed(object source, ElapsedEventArgs e) {
+			lock(serversWS) {
+				serversWS.ForEach(ws => {
+					bool ping = ws.Ping();
+					//Log.Trace("Server " + ws.Url + " Ping: " + ping);
+				});
+			}
 		}
 
 		#region IDisposable Support
@@ -113,8 +137,15 @@ namespace CS_EventsServer.Server.Comunication {
 								try { ws.CloseAsync(CloseStatusCode.Normal); } finally { ws = null; }
 							}
 						});
+
 						serversWS.Clear();
 						serversWS = null;
+					}
+
+					try { heartBeatTimer.Stop(); } finally {
+						heartBeatTimer.Elapsed -= onTimerElapsed;
+						heartBeatTimer.Dispose();
+						heartBeatTimer = null;
 					}
 				}
 

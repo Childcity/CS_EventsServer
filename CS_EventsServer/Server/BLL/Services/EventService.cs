@@ -3,11 +3,12 @@ using CS_EventsServer.Server.DAL.Interfaces;
 using CS_EventsServer.Server.DAL.Repositories;
 using CS_EventsServer.Server.DTO;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Data.Entity;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace CS_EventsServer.Server.BLL.Services {
 	public class EventService: IDisposable {
@@ -89,6 +90,91 @@ namespace CS_EventsServer.Server.BLL.Services {
 				};
 		}
 
+		public async Task<HolderLocationDTO> GetHolderLocations(HolderLocationPeriodDTO locationPeriod) {
+			DateTime startTime = locationPeriod.TimePeriod.StartTime.Value.LocalDateTime;
+			DateTime endTime = locationPeriod.TimePeriod.EndTime.Value.LocalDateTime;
+
+			Log.Trace("from: " + startTime.ToString() + "    to: " + endTime.ToString());
+
+			var query = from ev in unitOfWork.Events55.GetAll(true)
+						join startZone55 in unitOfWork.Zones55.GetAll(true) on ev.StartZoneID equals startZone55.colID into startZone55_temp
+						join targetZone55 in unitOfWork.Zones55.GetAll(true) on ev.StartZoneID equals targetZone55.colID into targetZone55_temp
+						join controlPoint in unitOfWork.ControlPoints.GetAll(true) on ev.ControlPointID equals controlPoint.colID into controlPoint_temp
+						join holder in 
+									(from eml in unitOfWork.Employees.GetAll(true) select new {
+										Id = eml.colID, Surname = eml.colSurname, Name = eml.colName, Middlename = eml.colMiddlename,
+										StateCode = "", DepartmentID = eml.colDepartmentID, Department = eml.colDepartment,
+										TabNumber = eml.colTabNumber, Photo = eml.colPhoto, HolderType = "Employe"
+									}).Concat
+									(from vis in unitOfWork.Visitors.GetAll(true) select new {
+										Id = vis.colID, Surname = vis.colSurname, Name = vis.colName, Middlename = vis.colMiddlename,
+										StateCode = "", DepartmentID = (int?)null, Department = "",
+										TabNumber = "", Photo = vis.colPhoto, HolderType = "Visitor" }
+									)
+								on ev.HolderID equals holder.Id into holder_temp
+								
+						from startZone55 in startZone55_temp.DefaultIfEmpty()
+						from targetZone55 in targetZone55_temp.DefaultIfEmpty()
+						from controlPoint in controlPoint_temp.DefaultIfEmpty()
+						from holder in holder_temp.DefaultIfEmpty()
+
+						where	((
+									holder.Name.ToLower().Contains(locationPeriod.HolderName.ToLower()) 
+									&& holder.Middlename.ToLower().Contains(locationPeriod.HolderMiddlename.ToLower())
+									&& holder.Surname.ToLower().Contains(locationPeriod.HolderSurname.ToLower())
+								) ||
+								(
+									holder.Name.ToLower().Contains(locationPeriod.HolderName.ToLower())
+									&& holder.Surname.ToLower().Contains(locationPeriod.HolderSurname.ToLower())
+								))
+								&& ev.EventTime >= startTime
+								&& ev.EventTime <= endTime
+
+						orderby ev.EventTime descending 
+
+						select new {
+							Event55 = ev,
+							StartZone = startZone55,
+							TargetZone = targetZone55,
+							ControlPoint = controlPoint,
+							Holder = holder
+						};
+
+			var holderEvents = await query.Take(30).ToListAsync(cancellationToken);
+
+			// create and fill events information
+			var eventsInfos = new List<EventInfoDTO>();
+			foreach(var eventInfo in holderEvents) {
+				eventsInfos.Add(new EventInfoDTO() {
+					Direction = eventInfo.Event55.Direction,
+					EventCode = eventInfo.Event55.EventCode,
+					EventTime = eventInfo.Event55.EventTime.ToUniversalTime(),
+
+					StartAreaName = eventInfo.StartZone.colName,
+					TargetAreaName = eventInfo.TargetZone.colName,
+
+					ObjectType = eventInfo.ControlPoint.colType,
+					ObjectName = eventInfo.ControlPoint.colName
+				});
+			}
+			
+			return new HolderLocationDTO() {
+				TimePeriod = locationPeriod.TimePeriod,
+				EventsInfo = eventsInfos,
+				HolderInfo = (holderEvents?.Count == 0) // fill Info only about holder. Other fields is null
+								? new EventDTO() 
+								: new EventDTO() {
+									CardNumber = holderEvents[0].Event55.CardNumber,
+									HolderType = holderEvents[0].Holder.HolderType,
+									HolderName = holderEvents[0].Holder.Name,
+									HolderMiddlename = holderEvents[0].Holder.Middlename,
+									HolderSurname = holderEvents[0].Holder.Surname,
+									HolderDepartment = holderEvents[0].Holder.Department,
+									HolderTabNumber = holderEvents[0].Holder.TabNumber,
+									HolderPhoto = holderEvents[0].Holder.Photo
+								}
+				};
+		}
 
 		#region IDisposable Support
 

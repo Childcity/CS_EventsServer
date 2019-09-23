@@ -1,0 +1,32 @@
+﻿using CS_EventsServer.Server.Comunication;
+using Newtonsoft.Json;
+
+namespace CS_EventsServer.Server.DTO {
+
+	public partial class HolderLocationPeriodDTO {
+
+		public QueryType.Type QueryType { get; set; }
+
+		public string HolderSurname { get; set; }
+
+		public string HolderName { get; set; }
+
+		public string HolderMiddlename { get; set; }
+
+		public TimePeriodDTO TimePeriod { get; set; }
+
+		public bool? IsHolderIn { get; set; }
+	}
+
+	public partial class HolderLocationPeriodDTO {
+
+		public static HolderLocationPeriodDTO FromObject(object obj) => FromJson(JsonConvert.SerializeObject(obj, JsonConverterSettings.Settings));
+
+		public static HolderLocationPeriodDTO FromJson(string json) => JsonConvert.DeserializeObject<HolderLocationPeriodDTO>(json, JsonConverterSettings.Settings);
+	}
+
+	public static class SerializeHolderLocationPeriod {
+
+		public static string ToJson(this HolderLocationPeriodDTO self, bool indented = false) => JsonConvert.SerializeObject(self, indented ? Formatting.Indented : Formatting.None, JsonConverterSettings.Settings);
+	}
+}

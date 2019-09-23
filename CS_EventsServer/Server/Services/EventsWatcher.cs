@@ -1,4 +1,4 @@
-﻿using CS_EventsServer.Server.BLL.Services;
+using CS_EventsServer.Server.BLL.Services;
 using CS_EventsServer.Server.Comunication;
 using CS_EventsServer.Server.Comunication.Commands;
 using CS_EventsServer.Server.DAL;
@@ -15,7 +15,7 @@ using TableDependency.SqlClient.Base.EventArgs;
 namespace CS_EventsServer.Server.Services {
 
 	public class EventsWatcher: IDisposable {
-		private static readonly ComunicationClient comunicator;
+		private static readonly ICommunicator comunicator;
 		private readonly CancellationToken cancellationToken;
 		private EntitieWatcher<Event55> event55Wtch;
 		private EventService eventService;
@@ -31,8 +31,10 @@ namespace CS_EventsServer.Server.Services {
 
 			// setup comunication with bot servers
 			comunicator.ServersUrls = conf.ServersUrls;
+			comunicator.OnRequest += onServerRequest;
 			comunicator.ConnectSubscribers();
 
+			// create service for interecting with data
 			eventService = new EventService(conf.ConnectionString, cancellationToken);
 
 			event55Wtch = new EntitieWatcher<Event55>(conf.ConnectionString, filter: event55 => event55.EventCode == 105);
@@ -44,18 +46,39 @@ namespace CS_EventsServer.Server.Services {
 
 			event55Wtch.Start();
 		}
+		
+		private void onServerRequest(object sender, CommandBase command) {
+			Log.Trace("onServerRequest: " + command?.Command);
+
+			try {
+				string cmdType = command.Command;
+
+				if(cmdType == RequestHolderLocation.Name) {
+					HolderLocationPeriodDTO holderLocationPeriod = HolderLocationPeriodDTO.FromObject(command.Params);
+
+					var holderLocationDTO = eventService.GetHolderLocations(holderLocationPeriod).Result;
+					holderLocationDTO.QueryType = holderLocationPeriod.QueryType;
+					holderLocationDTO.IsHolderIn = holderLocationPeriod.IsHolderIn;
+
+					var response = new ResponseHolderLocation(holderLocationDTO);
+					comunicator.NotifyAll(response, cancellationToken);
+				}
+			} catch(Exception e) {
+				Log.Warn(e.Message + "\n" + e.StackTrace);
+			}
+		}
 
 		private void onError(object sender, ErrorEventArgs e) {
-			Log.Debug("SqlTableDependency onError: " + e.Error?.Message);
+			Log.Warn("SqlTableDependency onError: " + e.Error?.Message);
 		}
 
 		private void onStatusChanged(object sender, StatusChangedEventArgs e) {
-			Log.Debug("SqlTableDependency onStatusChanged: " + e.Status.ToString());
+			Log.Trace("SqlTableDependency onStatusChanged: " + e.Status.ToString());
 		}
 
 		private async Task onChanged(object sender, object evArgs) {
 			try { 
-				Log.Debug("SqlTableDependency onChanged");
+				Log.Trace("SqlTableDependency onChanged");
 
 				if(evArgs is RecordChangedEventArgs<Event55>) {
 					var concreteEvArgs = evArgs as RecordChangedEventArgs<Event55>;
@@ -69,7 +92,7 @@ namespace CS_EventsServer.Server.Services {
 					await comunicator.NotifyAll(new RequestPushEvent(eventDTO), cancellationToken);
 				}
 			} catch(Exception e) {
-				Log.Trace(e.Message + "\n" + e.StackTrace);
+				Log.Warn(e.Message + "\n" + e.StackTrace);
 			}
 		}
 
@@ -83,9 +106,10 @@ namespace CS_EventsServer.Server.Services {
 				if(disposing) {
 					try {
 					} finally {
+						comunicator.OnRequest -= onServerRequest;
 						comunicator?.Dispose();
 
-						if(event55Wtch != null && event55Wtch.Dependancy != null) {
+						if(event55Wtch?.Dependancy != null) {
 							event55Wtch.Dependancy.OnChanged -= onChangedEvent55EventHandler;
 							event55Wtch.Dependancy.OnStatusChanged -= onStatusChanged;
 							event55Wtch.Dependancy.OnError -= onError;

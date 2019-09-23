@@ -12,6 +12,7 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -24,7 +25,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -149,9 +149,13 @@
       <DependentUpon>CardsEventsWatcherSvc.cs</DependentUpon>
     </Compile>
     <Compile Include="Server\BLL\Services\EventService.cs" />
+    <Compile Include="Server\BLL\StringExtensions.cs" />
     <Compile Include="Server\Communication\Commands\CommandBase.cs" />
     <Compile Include="Server\Communication\Commands\RequestPushEvent.cs" />
+    <Compile Include="Server\Communication\Commands\RequestHolderLocation.cs" />
+    <Compile Include="Server\Communication\Commands\ResponseHolderLocation.cs" />
     <Compile Include="Server\Communication\CommunicationClient.cs" />
+    <Compile Include="Server\Communication\JsonConverterSettings.cs" />
     <Compile Include="Server\DAL\EF\StopNet4Context.cs" />
     <Compile Include="Server\DAL\Entities\ControlPoint.cs" />
     <Compile Include="Server\DAL\Entities\Vehicle.cs" />
@@ -176,6 +180,11 @@
     <Compile Include="Server\DAL\Repositories\SQLServer\Zones55Repository.cs" />
     <Compile Include="Server\DAL\Repositories\SQLServer\Events55Repository.cs" />
     <Compile Include="Server\DTO\EventDTO.cs" />
+    <Compile Include="Server\DTO\EventInfoDTO.cs" />
+    <Compile Include="Server\DTO\HolderLocationDTO.cs" />
+    <Compile Include="Server\DTO\HolderLocationPeriodDTO.cs" />
+    <Compile Include="Server\DTO\QueryType.cs" />
+    <Compile Include="Server\DTO\TimePeriodDTO.cs" />
     <Compile Include="Server\Interfaces\AConfiguration.cs" />
     <Compile Include="Server\Interfaces\ICommunicator.cs" />
     <Compile Include="Server\Interfaces\IConfiguration.cs" />
