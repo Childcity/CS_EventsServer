@@ -1,4 +1,4 @@
-﻿using CS_EventsServer.Server.Comunication.Commands;
+using CS_EventsServer.Server.Comunication.Commands;
 using CS_EventsServer.Server.Interfaces;
 using System;
 using System.Collections.Generic;

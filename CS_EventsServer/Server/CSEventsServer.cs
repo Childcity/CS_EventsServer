@@ -1,4 +1,4 @@
-﻿using CS_EventsServer.Server.Services;
+using CS_EventsServer.Server.Services;
 using System;
 using System.Threading;
 

@@ -1,4 +1,4 @@
-﻿using CS_EventsServer.Server.BLL.Services;
+using CS_EventsServer.Server.BLL.Services;
 using CS_EventsServer.Server.Comunication;
 using CS_EventsServer.Server.Comunication.Commands;
 using CS_EventsServer.Server.DAL;
