@@ -67,26 +67,26 @@ namespace CS_EventsServer.Server.BLL.Services {
 			return eventInfo == null 
 				? new EventDTO()
 				: new EventDTO() {
-					EventCode = eventInfo.Event55.EventCode,
-					Direction = eventInfo.Event55.Direction,
-					CardNumber = eventInfo.Event55.CardNumber,
-					EventTime = eventInfo.Event55.EventTime,
+					EventCode = eventInfo?.Event55?.EventCode,
+					Direction = eventInfo?.Event55?.Direction,
+					CardNumber = eventInfo?.Event55?.CardNumber,
+					EventTime = eventInfo?.Event55?.EventTime,
 
-					AccountNumber = eventInfo.Account55.colAccountNumber,
+					AccountNumber = eventInfo?.Account55?.colAccountNumber,
 
-					StartAreaName = eventInfo.StartZone.colName,
-					TargetAreaName = eventInfo.TargetZone.colName,
+					StartAreaName = eventInfo?.StartZone?.colName,
+					TargetAreaName = eventInfo?.TargetZone?.colName,
 
-					ObjectType = eventInfo.ControlPoint.colType,
-					ObjectName = eventInfo.ControlPoint.colName,
+					ObjectType = eventInfo?.ControlPoint?.colType,
+					ObjectName = eventInfo?.ControlPoint?.colName,
 
-					HolderType = eventInfo.Holder.HolderType,
-					HolderSurname = eventInfo.Holder.Surname,
-					HolderName = eventInfo.Holder.Name,
-					HolderMiddlename = eventInfo.Holder.Middlename,
-					HolderDepartment = eventInfo.Holder.Department,
-					HolderTabNumber = eventInfo.Holder.TabNumber,
-					HolderPhoto = eventInfo.Holder.Photo
+					HolderType = eventInfo?.Holder?.HolderType,
+					HolderSurname = eventInfo?.Holder?.Surname,
+					HolderName = eventInfo?.Holder?.Name,
+					HolderMiddlename = eventInfo?.Holder?.Middlename,
+					HolderDepartment = eventInfo?.Holder?.Department,
+					HolderTabNumber = eventInfo?.Holder?.TabNumber,
+					HolderPhoto = eventInfo?.Holder?.Photo
 				};
 		}
 
@@ -146,15 +146,15 @@ namespace CS_EventsServer.Server.BLL.Services {
 			var eventsInfos = new List<EventInfoDTO>();
 			foreach(var eventInfo in holderEvents) {
 				eventsInfos.Add(new EventInfoDTO() {
-					Direction = eventInfo.Event55.Direction,
-					EventCode = eventInfo.Event55.EventCode,
-					EventTime = eventInfo.Event55.EventTime.ToUniversalTime(),
+					Direction = eventInfo?.Event55?.Direction,
+					EventCode = eventInfo?.Event55?.EventCode,
+					EventTime = eventInfo?.Event55?.EventTime.ToUniversalTime(),
 
-					StartAreaName = eventInfo.StartZone.colName,
-					TargetAreaName = eventInfo.TargetZone.colName,
+					StartAreaName = eventInfo?.StartZone?.colName,
+					TargetAreaName = eventInfo?.TargetZone?.colName,
 
-					ObjectType = eventInfo.ControlPoint.colType,
-					ObjectName = eventInfo.ControlPoint.colName
+					ObjectType = eventInfo?.ControlPoint?.colType,
+					ObjectName = eventInfo?.ControlPoint?.colName
 				});
 			}
 			
@@ -164,14 +164,14 @@ namespace CS_EventsServer.Server.BLL.Services {
 				HolderInfo = (holderEvents?.Count == 0) // fill Info only about holder. Other fields is null
 								? new EventDTO() 
 								: new EventDTO() {
-									CardNumber = holderEvents[0].Event55.CardNumber,
-									HolderType = holderEvents[0].Holder.HolderType,
-									HolderName = holderEvents[0].Holder.Name,
-									HolderMiddlename = holderEvents[0].Holder.Middlename,
-									HolderSurname = holderEvents[0].Holder.Surname,
-									HolderDepartment = holderEvents[0].Holder.Department,
-									HolderTabNumber = holderEvents[0].Holder.TabNumber,
-									HolderPhoto = holderEvents[0].Holder.Photo
+									CardNumber = holderEvents[0]?.Event55?.CardNumber,
+									HolderType = holderEvents[0]?.Holder?.HolderType,
+									HolderName = holderEvents[0]?.Holder?.Name,
+									HolderMiddlename = holderEvents[0]?.Holder?.Middlename,
+									HolderSurname = holderEvents[0]?.Holder?.Surname,
+									HolderDepartment = holderEvents[0]?.Holder?.Department,
+									HolderTabNumber = holderEvents[0]?.Holder?.TabNumber,
+									HolderPhoto = holderEvents[0]?.Holder?.Photo
 								}
 				};
 		}
