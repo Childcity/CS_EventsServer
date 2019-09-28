@@ -70,7 +70,7 @@ namespace CS_EventsServer.Server.BLL.Services {
 					EventCode = eventInfo?.Event55?.EventCode,
 					Direction = eventInfo?.Event55?.Direction,
 					CardNumber = eventInfo?.Event55?.CardNumber,
-					EventTime = eventInfo?.Event55?.EventTime,
+					EventTime = eventInfo?.Event55?.EventTime.ToUniversalTime(),
 
 					AccountNumber = eventInfo?.Account55?.colAccountNumber,
 
