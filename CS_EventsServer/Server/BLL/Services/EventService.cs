@@ -140,7 +140,7 @@ namespace CS_EventsServer.Server.BLL.Services {
 							Holder = holder
 						};
 
-			var holderEvents = await query.Take(30).ToListAsync(cancellationToken);
+			var holderEvents = await query.Take(2000).ToListAsync(cancellationToken);
 
 			// create and fill events information
 			var eventsInfos = new List<EventInfoDTO>();
